@@ -99,7 +99,7 @@
         </div>
 
         <!-- 4. DEPLOY TAB -->
-        <div id="deploy-tab" class="tab-content max-w-xl mx-auto space-y-5">
+        <div id="deploy-tab" class="tab-content max-w-xl mx-auto space-y-5 pb-6">
             <div id="deploy-form" class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 shadow-lg backdrop-blur-sm">
                 <div class="space-y-4">
                     <div>
@@ -127,18 +127,14 @@
                     DEPLOY TO GITHUB
                 </button>
 
-                <!-- Personal Ko-fi Widget Injection (Wrapped safely so adblockers won't crash the app) -->
-                <div class="mt-8 pt-5 border-t border-zinc-800/50 flex flex-col items-center">
+                <!-- 100% Safe Isolated Ko-fi Widget -->
+                <div class="mt-8 pt-5 border-t border-zinc-800/50 flex flex-col items-center w-full">
                     <p class="text-[10px] text-zinc-500 mb-3 font-bold uppercase tracking-wider">Support The Developer</p>
-                    <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
-                    <script type='text/javascript'>
-                        try {
-                            kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'U4Z321T55B');
-                            kofiwidget2.draw();
-                        } catch (e) {
-                            console.log("Ko-fi widget blocked by browser.");
-                        }
-                    </script> 
+                    <iframe 
+                        srcdoc="<html><head><style>body{margin:0;display:flex;justify-content:center;background:transparent;}</style></head><body><script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'U4Z321T55B');kofiwidget2.draw();</script></body></html>" 
+                        style="border:none; width:100%; height:60px; overflow:hidden;" 
+                        scrolling="no">
+                    </iframe>
                 </div>
             </div>
 
@@ -160,7 +156,7 @@
             </div>
         </div>
 
-        <!-- 5. WIKI TAB (Fully Updated for God-Mode Auto Deploy) -->
+        <!-- 5. WIKI TAB -->
         <div id="wiki-tab" class="tab-content max-w-xl mx-auto space-y-6 text-zinc-300">
             
             <div class="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-2xl p-6 shadow-lg">
@@ -244,8 +240,8 @@
     <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-zinc-800 border border-zinc-700 text-white px-5 py-3 rounded-full shadow-2xl text-sm font-bold opacity-0 transition-opacity pointer-events-none z-50 flex items-center gap-2"></div>
 
     <script>
-        // Data Structure v12
-        let files = JSON.parse(localStorage.getItem('odr-data-v12')) || [
+        // Data Structure v13
+        let files = JSON.parse(localStorage.getItem('odr-data-v13')) || [
             { id: 1, name: 'index.html', content: '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>On Da Run</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <h1>Ready to Build</h1>\n  <script src="script.js"></' + 'script>\n</body>\n</html>', isAsset: false },
             { id: 2, name: 'style.css', content: 'body {\n  background-color: #111;\n  color: #10b981;\n  font-family: sans-serif;\n  text-align: center;\n  padding-top: 50px;\n}', isAsset: false },
             { id: 3, name: 'script.js', content: 'console.log("App Initialized.");', isAsset: false }
@@ -271,7 +267,7 @@
 
         function saveState() { 
             try {
-                localStorage.setItem('odr-data-v12', JSON.stringify(files)); 
+                localStorage.setItem('odr-data-v13', JSON.stringify(files)); 
             } catch (e) {
                 showToast("⚠️ Storage full! Please delete some heavy images.");
             }
@@ -284,12 +280,21 @@
             setTimeout(() => toast.style.opacity = '0', 2500);
         }
 
+        // HTML Escaping safeguards the DOM from tearing when pasting tags into textareas
         function escapeHTML(str) {
-            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+            return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         }
 
         function escapeRegExp(string) {
             return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // Modern, crash-proof Base64 Encoding for emojis & unicode
+        function encodeBase64Unicode(str) {
+            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                function toSolidBytes(match, p1) {
+                    return String.fromCharCode('0x' + p1);
+            }));
         }
 
         function switchTab(tabId) {
@@ -327,11 +332,11 @@
         function generatePWA() {
             let changed = false;
             if(!files.find(f => f.name === 'manifest.json')) {
-                files.push({id: Date.now(), name: 'manifest.json', content: '{\n  "name": "ODR App",\n  "short_name": "ODR",\n  "start_url": "./index.html",\n  "display": "standalone",\n  "background_color": "#09090b",\n  "theme_color": "#10b981",\n  "icons": [\n    {\n      "src": "icon.png",\n      "sizes": "192x192",\n      "type": "image/png"\n    }\n  ]\n}', isAsset: false});
+                files.push({id: Date.now() + Math.random(), name: 'manifest.json', content: '{\n  "name": "ODR App",\n  "short_name": "ODR",\n  "start_url": "./index.html",\n  "display": "standalone",\n  "background_color": "#09090b",\n  "theme_color": "#10b981",\n  "icons": [\n    {\n      "src": "icon.png",\n      "sizes": "192x192",\n      "type": "image/png"\n    }\n  ]\n}', isAsset: false});
                 changed = true;
             }
             if(!files.find(f => f.name === 'sw.js')) {
-                files.push({id: Date.now()+1, name: 'sw.js', content: 'self.addEventListener("install", e => { console.log("Service Worker Installed"); });\nself.addEventListener("fetch", e => { });', isAsset: false});
+                files.push({id: Date.now() + Math.random(), name: 'sw.js', content: 'self.addEventListener("install", e => { console.log("Service Worker Installed"); });\nself.addEventListener("fetch", e => { });', isAsset: false});
                 changed = true;
             }
             
@@ -407,7 +412,7 @@
         }
 
         function addNewFile() {
-            files.push({ id: Date.now(), name: `file_${Date.now().toString().slice(-4)}.html`, content: '', isAsset: false });
+            files.push({ id: Date.now() + Math.random(), name: `file_${Date.now().toString().slice(-4)}.html`, content: '', isAsset: false });
             renderFiles();
             saveState();
         }
@@ -467,7 +472,7 @@
         }
 
         function addNewAsset() {
-            files.push({ id: Date.now(), name: `asset_${Date.now().toString().slice(-4)}.png`, content: '', isAsset: true });
+            files.push({ id: Date.now() + Math.random(), name: `asset_${Date.now().toString().slice(-4)}.png`, content: '', isAsset: true });
             renderAssets();
             saveState();
         }
@@ -560,9 +565,10 @@
         async function deployAllFiles() {
             const btn = document.getElementById('deploy-btn');
             
-            const token = document.getElementById('gh-token').value;
-            const owner = document.getElementById('gh-owner').value;
-            const repo = document.getElementById('gh-repo').value;
+            const token = document.getElementById('gh-token').value.trim();
+            const owner = document.getElementById('gh-owner').value.trim();
+            // Silent mobile-keyboard safeguard: strips trailing spaces and uses dashes
+            const repo = document.getElementById('gh-repo').value.trim().replace(/\s+/g, '-');
             const message = document.getElementById('gh-message').value || "Shipped with ODR";
 
             if(!token || !owner || !repo) return alert('Repository credentials required.');
@@ -583,7 +589,7 @@
                 
                 try {
                     const checkRepo = await fetch(`[https://api.github.com/repos/$](https://api.github.com/repos/$){owner}/${repo}`, { headers });
-                    if (checkRepo.status === 404) repoExists = false;
+                    if (checkRepo.status === 404 || checkRepo.status === 401) repoExists = false;
                 } catch (e) { repoExists = false; }
 
                 // STEP 2: Create Repo if missing
@@ -604,7 +610,7 @@
                     await new Promise(r => setTimeout(r, 1500)); 
                 }
 
-                // STEP 3: Push Files (Implicitly creates 'main' branch on first push)
+                // STEP 3: Push Files
                 const filesToPush = files.filter(f => !f.isAsset || (f.isAsset && f.content));
 
                 for (let i = 0; i < filesToPush.length; i++) {
@@ -621,7 +627,7 @@
                         } catch (e) {}
                     }
 
-                    let fileContentRaw = file.isAsset ? file.content.split(',')[1] : btoa(unescape(encodeURIComponent(file.content)));
+                    let fileContentRaw = file.isAsset ? file.content.split(',')[1] : encodeBase64Unicode(file.content);
                     const payload = { message: message, content: fileContentRaw };
                     if (sha) payload.sha = sha;
 
@@ -629,10 +635,10 @@
                     if (!response.ok) throw new Error(`Failed pushing ${file.name}`);
                 }
 
-                // STEP 4: Configure GitHub Pages (if we just made the repo)
+                // STEP 4: Configure GitHub Pages
                 if (!repoExists) {
                     btn.innerHTML = `<span class="animate-pulse">CONFIGURING PAGES...</span>`;
-                    await new Promise(r => setTimeout(r, 3000)); // wait for branch to register globally
+                    await new Promise(r => setTimeout(r, 3000)); 
                     
                     const pagesRes = await fetch(`[https://api.github.com/repos/$](https://api.github.com/repos/$){owner}/${repo}/pages`, {
                         method: 'POST',
@@ -642,7 +648,7 @@
                         })
                     });
                     
-                    if (!pagesRes.ok) console.warn("Pages auto-config delayed, check repo settings manually if 404.");
+                    if (!pagesRes.ok) console.warn("Pages auto-config delayed.");
                 }
 
                 // SUCCESS
@@ -657,14 +663,14 @@
         }
 
         function openLiveSite() {
-            const owner = document.getElementById('gh-owner').value;
-            const repo = document.getElementById('gh-repo').value;
+            const owner = document.getElementById('gh-owner').value.trim();
+            const repo = document.getElementById('gh-repo').value.trim().replace(/\s+/g, '-');
             window.open(`https://${owner}.github.io/${repo}`, '_blank');
         }
 
         function startNewProject() {
             if(confirm("This will clear all current code. Are you sure?")) {
-                localStorage.removeItem('odr-data-v12');
+                localStorage.removeItem('odr-data-v13');
                 window.location.reload(); 
             }
         }
