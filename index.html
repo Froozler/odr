@@ -10,6 +10,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- CodeMirror Engine -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/material-ocean.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
@@ -50,6 +51,7 @@
 </head>
 <body class="text-zinc-300 flex flex-col h-screen overflow-hidden bg-[#09090b] selection:bg-emerald-500/30">
 
+    <!-- Top Status / Branding Banner -->
     <header class="bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/60 pt-[env(safe-area-inset-top)] z-20 no-select sticky top-0">
         <div class="py-3 px-4 flex justify-between items-center">
             <div class="text-[10px] font-mono tracking-widest text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">DEPLOY ANYWHERE</div>
@@ -57,8 +59,10 @@
         </div>
     </header>
 
+    <!-- Main Content Area: Aggressive bottom padding (150px) ensures we can always scroll past the nav bar -->
     <main class="flex-1 overflow-y-auto px-4 pt-5 pb-[150px]">
         
+        <!-- 1. CODE TAB -->
         <div id="code-tab" class="tab-content active max-w-3xl mx-auto space-y-5">
             <div id="file-container" class="space-y-4"></div>
             
@@ -72,6 +76,7 @@
             </div>
         </div>
 
+        <!-- 2. ASSETS TAB -->
         <div id="assets-tab" class="tab-content max-w-3xl mx-auto space-y-5">
             <button onclick="addNewAsset()" class="w-full py-4 bg-zinc-900/80 border border-dashed border-zinc-700 rounded-xl text-zinc-400 font-bold text-[11px] tracking-widest hover:border-emerald-500 hover:text-emerald-400 transition-all uppercase no-select shadow-sm">
                 + Add Asset Box
@@ -79,6 +84,7 @@
             <div id="assets-container" class="space-y-4"></div>
         </div>
 
+        <!-- 3. PREVIEW TAB -->
         <div id="preview-tab" class="tab-content h-full max-w-3xl mx-auto flex flex-col">
             <div class="flex-1 w-full bg-white rounded-2xl overflow-hidden shadow-2xl border border-zinc-800 relative flex flex-col">
                 <div class="bg-zinc-100 border-b border-zinc-300 p-2.5 flex items-center justify-between z-10 shrink-0 no-select">
@@ -92,6 +98,7 @@
             </div>
         </div>
 
+        <!-- 4. DEPLOY TAB -->
         <div id="deploy-tab" class="tab-content max-w-xl mx-auto space-y-5">
             <div id="deploy-form" class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 shadow-lg backdrop-blur-sm">
                 <div class="space-y-4">
@@ -120,6 +127,7 @@
                     DEPLOY TO GITHUB
                 </button>
 
+                <!-- Personal Ko-fi Widget Injection (Wrapped safely so adblockers won't crash the app) -->
                 <div class="mt-8 pt-5 border-t border-zinc-800/50 flex flex-col items-center">
                     <p class="text-[10px] text-zinc-500 mb-3 font-bold uppercase tracking-wider">Support The Developer</p>
                     <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
@@ -134,6 +142,7 @@
                 </div>
             </div>
 
+            <!-- Success Screen -->
             <div id="success-screen" class="hidden bg-zinc-900/80 backdrop-blur-md border border-emerald-500/30 rounded-2xl p-8 text-center space-y-6 shadow-2xl">
                 <div class="w-20 h-20 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-4xl border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)]">✓</div>
                 <div>
@@ -151,6 +160,7 @@
             </div>
         </div>
 
+        <!-- 5. WIKI TAB (Fully Updated for God-Mode Auto Deploy) -->
         <div id="wiki-tab" class="tab-content max-w-xl mx-auto space-y-6 text-zinc-300">
             
             <div class="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-2xl p-6 shadow-lg">
@@ -162,7 +172,7 @@
 
             <div class="space-y-4">
                 <h3 class="font-black text-xl text-emerald-400 border-b border-zinc-800 pb-2">Step 1: Get a Free "Storage Unit"</h3>
-                <p class="text-sm leading-relaxed">To put a website on the internet for free, we use a service called <b>GitHub</b>. It's like a free public storage unit for your code.</p>
+                <p class="text-sm leading-relaxed">To put a website on the internet for free, we use a service called <b>GitHub</b>. It acts like a free public storage unit for your code.</p>
                 <ul class="list-disc pl-5 text-sm space-y-2 text-zinc-400">
                     <li>Go to <a href="https://github.com" target="_blank" class="text-indigo-400 underline font-bold">GitHub.com</a> and sign up for a free account.</li>
                     <li>Remember your <b>Username</b>. You will need to type this into the DEPLOY tab later!</li>
@@ -178,51 +188,33 @@
                     <p><b>3.</b> Scroll all the way down the left menu and click <b>Developer Settings</b>.</p>
                     <p><b>4.</b> Click <b>Personal access tokens</b>, then click <b>Tokens (classic)</b>.</p>
                     <p><b>5.</b> Click <b>Generate new token (classic)</b>.</p>
-                    <p><b>6.</b> Give it a name (like "ODR App"). Check the box that says <b>repo</b> (this gives it permission to save files).</p>
+                    <p><b>6.</b> Give it a name (like "ODR App"). Check the box that says <b>repo</b> (this allows it to save files and turn on your website).</p>
                     <p><b>7.</b> Scroll down and click Generate. <b class="text-white">Copy the long password it gives you!</b> Paste this into the "Access Token" box in the DEPLOY tab.</p>
                 </div>
             </div>
 
             <div class="space-y-4">
-                <h3 class="font-black text-xl text-emerald-400 border-b border-zinc-800 pb-2">Step 3: Create a Folder for your Website</h3>
-                <p class="text-sm leading-relaxed">Now we need a specific folder inside GitHub to hold your website files. This is called a <b>Repository</b>.</p>
+                <h3 class="font-black text-xl text-emerald-400 border-b border-zinc-800 pb-2">Step 3: Type & Deploy!</h3>
+                <p class="text-sm leading-relaxed">ODR is incredibly smart. You don't even need to create the folders on GitHub yourself.</p>
                 <ul class="list-disc pl-5 text-sm space-y-2 text-zinc-400">
-                    <li>On GitHub, click the <b>+</b> icon at the top and select <b>New repository</b>.</li>
-                    <li>Give it a short, simple name (e.g., <code>my-website</code>). Type this exact name into the "Repository Name" box in the DEPLOY tab.</li>
-                    <li>Make sure it is set to <b>Public</b>. Scroll down and click <b>Create repository</b>.</li>
+                    <li>Go to the <b>DEPLOY</b> tab at the bottom of this screen.</li>
+                    <li>Fill in your Token and Username.</li>
+                    <li>Type <i>any name you want</i> into the <b>Repository Name</b> box (e.g., <code>cool-new-site</code>). No spaces allowed, use dashes!</li>
+                    <li>Hit the big green <b>DEPLOY TO GITHUB</b> button.</li>
                 </ul>
-            </div>
-
-            <div class="space-y-4">
-                <h3 class="font-black text-xl text-emerald-400 border-b border-zinc-800 pb-2">Step 4: Your First Deploy!</h3>
-                <p class="text-sm leading-relaxed">Now that your GitHub folder is ready, we need to put some files in it before we can turn it into a website!</p>
-                <ul class="list-disc pl-5 text-sm space-y-2 text-zinc-400">
-                    <li>Tap the <b>DEPLOY</b> tab at the bottom of this screen.</li>
-                    <li>Fill in the <b>Personal Access Token</b>, <b>Username</b>, and <b>Repository Name</b> you just created.</li>
-                    <li>Tap the big green <b>DEPLOY TO GITHUB</b> button. Your phone is now sending the files over!</li>
-                </ul>
-            </div>
-
-            <div class="space-y-4">
-                <h3 class="font-black text-xl text-emerald-400 border-b border-zinc-800 pb-2">Step 5: Turn the Internet On!</h3>
-                <p class="text-sm leading-relaxed">Now that your code is safely stored in GitHub, we can flip the switch to turn it into a live website.</p>
-                <ul class="list-disc pl-5 text-sm space-y-2 text-zinc-400">
-                    <li>Inside your repository on GitHub, click the <b>Settings</b> tab at the top.</li>
-                    <li>On the left menu, click <b>Pages</b>.</li>
-                    <li>Under "Build and deployment" -> "Source", select <b>Deploy from a branch</b>.</li>
-                    <li>Under "Branch", change "None" to <b>main</b> (or master), and click <b>Save</b>.</li>
-                </ul>
+                <p class="text-sm leading-relaxed mt-2 text-emerald-400"><b>ODR will automatically log into GitHub, create the folder, push your code, and turn the website on for you.</b></p>
             </div>
 
             <div class="bg-emerald-900/20 border border-emerald-500/30 rounded-2xl p-6 shadow-lg mt-6 text-center">
                 <h2 class="text-xl font-black text-emerald-400 mb-2">🎉 You're Ready!</h2>
                 <p class="text-sm leading-relaxed text-emerald-100/80 mb-2">
-                    You only ever have to do that setup once! From now on, just paste your code into the CODE tab, hit <b>DEPLOY TO GITHUB</b>, and your website will update live automatically.
+                    You only ever have to get your Token once! From now on, just paste your code into the CODE tab, hit <b>DEPLOY TO GITHUB</b>, and your websites will be live on the internet!
                 </p>
             </div>
         </div>
     </main>
 
+    <!-- Bottom Nav -->
     <nav class="fixed bottom-0 left-0 right-0 bg-zinc-950/90 backdrop-blur-xl border-t border-zinc-800/60 pb-[env(safe-area-inset-bottom)] z-30 no-select">
         <div class="flex justify-around items-center h-[70px] px-1">
             <button onclick="switchTab('code')" id="btn-code" class="nav-btn active flex flex-col items-center justify-center w-full h-full text-emerald-400 transition-colors">
@@ -248,11 +240,12 @@
         </div>
     </nav>
 
+    <!-- Toast UI -->
     <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-zinc-800 border border-zinc-700 text-white px-5 py-3 rounded-full shadow-2xl text-sm font-bold opacity-0 transition-opacity pointer-events-none z-50 flex items-center gap-2"></div>
 
     <script>
-        // Data Structure v11
-        let files = JSON.parse(localStorage.getItem('odr-data-v11')) || [
+        // Data Structure v12
+        let files = JSON.parse(localStorage.getItem('odr-data-v12')) || [
             { id: 1, name: 'index.html', content: '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>On Da Run</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <h1>Ready to Build</h1>\n  <script src="script.js"></' + 'script>\n</body>\n</html>', isAsset: false },
             { id: 2, name: 'style.css', content: 'body {\n  background-color: #111;\n  color: #10b981;\n  font-family: sans-serif;\n  text-align: center;\n  padding-top: 50px;\n}', isAsset: false },
             { id: 3, name: 'script.js', content: 'console.log("App Initialized.");', isAsset: false }
@@ -278,7 +271,7 @@
 
         function saveState() { 
             try {
-                localStorage.setItem('odr-data-v11', JSON.stringify(files)); 
+                localStorage.setItem('odr-data-v12', JSON.stringify(files)); 
             } catch (e) {
                 showToast("⚠️ Storage full! Please delete some heavy images.");
             }
@@ -320,7 +313,8 @@
             if (!cm) return;
             let val = cm.getValue();
             
-            const cleanVal = val.replace(/^```[a-z]*\s*\n/gi, '').replace(/\n```\s*$/g, '').replace(/```\s*$/g, '');
+            const cleanVal = val.replace(/^```[a-z]*\s*\n/gi, '').replace(/\n
+```\s*$/g, '').replace(/```\s*$/g, '');
             
             if (val !== cleanVal) {
                 cm.setValue(cleanVal);
@@ -562,7 +556,7 @@
             }
         }
 
-        // --- GITHUB API DEPLOYMENT ---
+        // --- GOD-MODE GITHUB API DEPLOYMENT ---
         async function deployAllFiles() {
             const btn = document.getElementById('deploy-btn');
             
@@ -574,37 +568,91 @@
             if(!token || !owner || !repo) return alert('Repository credentials required.');
 
             saveDeploySettings();
+            btn.disabled = true; 
 
-            btn.disabled = true; btn.innerHTML = `<span class="animate-pulse">UPLOADING...</span>`;
+            const headers = {
+                'Authorization': `token ${token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            };
 
             try {
+                // STEP 1: Check if Repo Exists
+                btn.innerHTML = `<span class="animate-pulse">CHECKING REPO...</span>`;
+                let repoExists = true;
+                
+                try {
+                    const checkRepo = await fetch(`[https://api.github.com/repos/$](https://api.github.com/repos/$){owner}/${repo}`, { headers });
+                    if (checkRepo.status === 404) repoExists = false;
+                } catch (e) { repoExists = false; }
+
+                // STEP 2: Create Repo if missing
+                if (!repoExists) {
+                    btn.innerHTML = `<span class="animate-pulse">CREATING REPO...</span>`;
+                    const createRes = await fetch(`[https://api.github.com/user/repos](https://api.github.com/user/repos)`, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({
+                            name: repo,
+                            description: 'Created via On Da Run',
+                            private: false,
+                            auto_init: false 
+                        })
+                    });
+                    
+                    if (!createRes.ok) throw new Error("Failed to create repository. Check token permissions.");
+                    await new Promise(r => setTimeout(r, 1500)); 
+                }
+
+                // STEP 3: Push Files (Implicitly creates 'main' branch on first push)
                 const filesToPush = files.filter(f => !f.isAsset || (f.isAsset && f.content));
 
                 for (let i = 0; i < filesToPush.length; i++) {
                     const file = filesToPush[i];
                     btn.innerText = `PUSHING [${i+1}/${filesToPush.length}]`;
                     
-                    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${file.name}`;
+                    const url = `[https://api.github.com/repos/$](https://api.github.com/repos/$){owner}/${repo}/contents/${file.name}`;
                     let sha = null;
 
-                    try {
-                        const checkRes = await fetch(url, { headers: { 'Authorization': `token ${token}` } });
-                        if (checkRes.ok) sha = (await checkRes.json()).sha;
-                    } catch (e) {}
+                    if (repoExists) {
+                        try {
+                            const checkFile = await fetch(url, { headers });
+                            if (checkFile.ok) sha = (await checkFile.json()).sha;
+                        } catch (e) {}
+                    }
 
                     let fileContentRaw = file.isAsset ? file.content.split(',')[1] : btoa(unescape(encodeURIComponent(file.content)));
                     const payload = { message: message, content: fileContentRaw };
                     if (sha) payload.sha = sha;
 
-                    const response = await fetch(url, { method: 'PUT', headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (!response.ok) throw new Error((await response.json()).message);
+                    const response = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`Failed pushing ${file.name}`);
                 }
+
+                // STEP 4: Configure GitHub Pages (if we just made the repo)
+                if (!repoExists) {
+                    btn.innerHTML = `<span class="animate-pulse">CONFIGURING PAGES...</span>`;
+                    await new Promise(r => setTimeout(r, 3000)); // wait for branch to register globally
+                    
+                    const pagesRes = await fetch(`[https://api.github.com/repos/$](https://api.github.com/repos/$){owner}/${repo}/pages`, {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({
+                            source: { branch: "main", path: "/" }
+                        })
+                    });
+                    
+                    if (!pagesRes.ok) console.warn("Pages auto-config delayed, check repo settings manually if 404.");
+                }
+
+                // SUCCESS
                 document.getElementById('deploy-form').classList.add('hidden');
                 document.getElementById('success-screen').classList.remove('hidden');
 
             } catch (err) {
-                alert(`Push Failed: ${err.message}`);
-                btn.disabled = false; btn.innerHTML = "DEPLOY TO GITHUB";
+                alert(`Error: ${err.message}`);
+                btn.disabled = false; 
+                btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> DEPLOY TO GITHUB`;
             }
         }
 
@@ -616,7 +664,7 @@
 
         function startNewProject() {
             if(confirm("This will clear all current code. Are you sure?")) {
-                localStorage.removeItem('odr-data-v11');
+                localStorage.removeItem('odr-data-v12');
                 window.location.reload(); 
             }
         }
