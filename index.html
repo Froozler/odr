@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#09090b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>On Da Run</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/material-ocean.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
+
+    <style>
+        body { 
+            background-color: #09090b; 
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        details > summary { list-style: none; outline: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        
+        /* Brutal isolation to prevent iframe bleed */
+        .tab-content { display: none !important; animation: fadeSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        .tab-content.active { display: block !important; }
+        #preview-tab.active { display: flex !important; flex-direction: column; }
+        
+        @keyframes fadeSlideUp { 
+            from { opacity: 0; transform: translateY(8px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        
+        .CodeMirror { height: 320px !important; border-radius: 0 0 1rem 1rem; font-family: 'SFMono-Regular', Consolas, monospace; font-size: 13px; z-index: 0; background: #0f0f13 !important;}
+        .CodeMirror-gutters { background: #09090b !important; border-right: 1px solid #27272a !important; }
+        
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+        
+        .no-select { -webkit-user-select: none; user-select: none; }
+    </style>
+</head>
+<body class="text-zinc-300 flex flex-col h-screen overflow-hidden bg-[#09090b] selection:bg-emerald-500/30">
+
+    <header class="bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/60 pt-[env(safe-area-inset-top)] z-20 no-select sticky top-0">
+        <div class="py-3 px-4 flex justify-between items-center">
+            <div class="text-[10px] font-mono tracking-widest text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">DEPLOY ANYWHERE</div>
+            <div class="text-base font-black italic tracking-widest uppercase bg-gradient-to-r from-emerald-400 via-cyan-400 to-indigo-400 text-transparent bg-clip-text drop-shadow-md">On Da Run</div>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto px-4 pt-5 pb-[calc(80px+env(safe-area-inset-bottom))]">
+        
+        <div id="code-tab" class="tab-content active max-w-3xl mx-auto space-y-5">
+            <div id="file-container" class="space-y-4"></div>
+            
+            <div class="flex gap-2 pt-2">
+                <button onclick="addNewFile()" class="flex-1 py-4 bg-zinc-900/80 border border-dashed border-zinc-700 rounded-xl text-zinc-400 font-bold text-[11px] tracking-widest hover:border-emerald-500 hover:text-emerald-400 transition-all uppercase no-select shadow-sm">
+                    + New File
+                </button>
+                <button onclick="generatePWA()" class="flex-1 py-4 bg-indigo-900/20 border border-dashed border-indigo-700/50 rounded-xl text-indigo-400 font-bold text-[11px] tracking-widest hover:border-indigo-400 hover:bg-indigo-900/40 transition-all uppercase no-select shadow-sm flex items-center justify-center gap-1.5">
+                    ⚡ Add PWA
+                </button>
+            </div>
+        </div>
+
+        <div id="assets-tab" class="tab-content max-w-3xl mx-auto space-y-5">
+            <button onclick="addNewAsset()" class="w-full py-4 bg-zinc-900/80 border border-dashed border-zinc-700 rounded-xl text-zinc-400 font-bold text-[11px] tracking-widest hover:border-emerald-500 hover:text-emerald-400 transition-all uppercase no-select shadow-sm">
+                + Add Asset Box
+            </button>
+            <div id="assets-container" class="space-y-4"></div>
+        </div>
+
+        <div id="preview-tab" class="tab-content h-full max-w-3xl mx-auto flex flex-col">
+            <div class="flex-1 w-full bg-white rounded-2xl overflow-hidden shadow-2xl border border-zinc-800 relative flex flex-col">
+                <div class="bg-zinc-100 border-b border-zinc-300 p-2.5 flex items-center justify-between z-10 shrink-0 no-select">
+                    <div class="bg-white rounded-md py-1.5 px-3 text-xs font-mono font-bold text-zinc-500 shadow-sm border border-zinc-200" id="preview-url-bar">Live Preview</div>
+                    <button onclick="updatePreview()" class="text-zinc-600 hover:text-zinc-900 bg-white shadow-sm border border-zinc-200 rounded-md py-1.5 px-4 text-xs font-bold transition-colors active:bg-zinc-100 flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        RELOAD
+                    </button>
+                </div>
+                <iframe id="preview-frame" class="w-full flex-1 border-0 bg-white"></iframe>
+            </div>
+        </div>
+
+        <div id="deploy-tab" class="tab-content max-w-xl mx-auto space-y-5 pb-6">
+            <div id="deploy-form" class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 shadow-lg backdrop-blur-sm">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 ml-1">GitHub Personal Access Token</label>
+                        <input type="password" id="gh-token" oninput="saveDeploySettings()" class="w-full bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 text-zinc-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm" placeholder="ghp_xxxxxxxxxxxx">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 ml-1">Owner / Username</label>
+                            <input type="text" id="gh-owner" oninput="saveDeploySettings()" class="w-full bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 text-zinc-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm" placeholder="username">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 ml-1">Repository Name</label>
+                            <input type="text" id="gh-repo" oninput="saveDeploySettings()" class="w-full bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 text-zinc-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm" placeholder="my-website">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5 ml-1">Commit Message</label>
+                        <input type="text" id="gh-message" oninput="saveDeploySettings()" class="w-full bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 text-zinc-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-sm" placeholder="Shipped with ODR">
+                    </div>
+                </div>
+                
+                <button onclick="deployAllFiles()" id="deploy-btn" class="w-full bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black tracking-wide py-4 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all active:scale-[0.98] mt-6 no-select flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    DEPLOY TO GITHUB PAGES
+                </button>
+
+                <div class="mt-8 pt-5 border-t border-zinc-800/50 flex flex-col items-center">
+                    <p class="text-[10px] text-zinc-500 mb-3 font-bold uppercase tracking-wider">Support The Developer</p>
+                    <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+                    <script type='text/javascript'>
+                        try {
+                            kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'U4Z321T55B');
+                            kofiwidget2.draw();
+                        } catch (e) {
+                            console.log("Ko-fi widget blocked by browser.");
+                        }
+                    </script> 
+                </div>
+            </div>
+
+            <div id="success-screen" class="hidden bg-zinc-900/80 backdrop-blur-md border border-emerald-500/30 rounded-2xl p-8 text-center space-y-6 shadow-2xl">
+                <div class="w-20 h-20 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-4xl border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)]">✓</div>
+                <div>
+                    <h2 class="text-2xl font-black text-white mb-2 tracking-tight">Deployed Live</h2>
+                    <p class="text-sm text-zinc-400 leading-relaxed">Code pushed to GitHub. The live URL typically propagates in 1-2 minutes depending on GitHub's queue.</p>
+                </div>
+                <div class="space-y-3 pt-4">
+                    <button onclick="openLiveSite()" class="w-full bg-emerald-500 text-zinc-950 font-bold py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg">
+                        Open Live Site ↗
+                    </button>
+                    <button onclick="startNewProject()" class="w-full bg-transparent border border-zinc-700 text-zinc-300 font-bold py-4 rounded-xl transition-all hover:bg-zinc-800 active:scale-[0.98]">
+                        Start Fresh Project
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="wiki-tab" class="tab-content max-w-xl mx-auto space-y-6 pb-6 text-zinc-300">
+            
+            <div class="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-2xl p-6 shadow-lg">
+                <h2 class="text-2xl font-black text-white tracking-tight mb-2 flex items-center gap-2">👋 Welcome to ODR!</h2>
+                <p class="text-sm leading-relaxed text-indigo-100/80">
+                    Think of this app as your magic pocket-factory. You can ask Artificial Intelligence to write website code for you, paste it into the <b>CODE</b> tab, see what it looks like in the <b>PREVIEW</b> tab, and instantly put it on the real internet using the <b>DEPLOY</b> tab.
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="font-black text-xl text-emerald-400 border-b border-zinc-800 pb-2">Step 1: Get a Free "Storage Unit"</h3>
+                <p class="text-sm leading-relaxed">To put a website on the internet for free, we use a service called <b>GitHub</b>. It's like a free public storage unit for your code.</p>
+                <ul class="list-disc pl-5 text-sm space-y-2 text-zinc-400">
+                    <li>Go to <a href="https://github.com" target="_blank" class="text-indigo-400 underline font-bold">GitHub.com</a> and sign up for a free account.</li>
+                    <li>Remember your <b>Username</b>. You will need to type this into the DEPLOY tab later!</li>
+                </ul>
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="font-black text-xl text-emerald-400 border-b border-zinc-800 pb-2">Step 2: Get your Security Key</h3>
+                <p class="text-sm leading-relaxed">For this app to send code to your GitHub account securely, it needs a special digital key called a <b>Personal Access Token</b>.</p>
+                <div class="bg-zinc-900 p-4 rounded-xl border border-zinc-800 text-sm space-y-2 text-zinc-400">
+                    <p><b>1.</b> Log into GitHub and click your profile picture (top right).</p>
+                    <p><b>2.</b> Click <b>Settings</b> at the bottom of the menu.</p>
+                    <p><b>3.</b> Scroll all the way down the left menu and click <b>Developer Settings</b>.</p>
+                    <p><b>4.</b> Click <b>Personal access tokens</b>, then click <b>Tokens (classic)</b>.</p>
+                    <p><b>5.</b> Click <b>Generate new token (classic)</b>.</p>
+                    <p><b>6.</b> Give it a name (like "ODR App"). Check the box that says <b>repo</b> (this gives it permission to save files).</p>
+                    <p><b>7.</b> Scroll down and click Generate. <b class="text-white">Copy the long password it gives you!</b> Paste this into the "Access Token" box in the DEPLOY tab.</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="font-black text-xl text-emerald-400 border-b border-zinc-800 pb-2">Step 3: Create a Folder for your Website</h3>
+                <p class="text-sm leading-relaxed">Now we need a specific folder inside GitHub to hold your website files. This is called a <b>Repository</b>.</p>
+                <ul class="list-disc pl-5 text-sm space-y-2 text-zinc-400">
+                    <li>On GitHub, click the <b>+</b> icon at the top and select <b>New repository</b>.</li>
+                    <li>Give it a short, simple name (e.g., <code>my-website</code>). Type this exact name into the "Repository Name" box in the DEPLOY tab.</li>
+                    <li>Make sure it is set to <b>Public</b>. Scroll down and click <b>Create repository</b>.</li>
+                </ul>
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="font-black text-xl text-emerald-400 border-b border-zinc-800 pb-2">Step 4: Turn the Internet On!</h3>
+                <p class="text-sm leading-relaxed">The last step is telling GitHub to treat that folder as a real website instead of just a storage box.</p>
+                <ul class="list-disc pl-5 text-sm space-y-2 text-zinc-400">
+                    <li>Inside your new repository on GitHub, click the <b>Settings</b> tab at the top.</li>
+                    <li>On the left menu, click <b>Pages</b>.</li>
+                    <li>Under "Build and deployment" -> "Source", select <b>Deploy from a branch</b>.</li>
+                    <li>Under "Branch", change "None" to <b>main</b>, and click <b>Save</b>.</li>
+                </ul>
+            </div>
+
+            <div class="bg-emerald-900/20 border border-emerald-500/30 rounded-2xl p-6 shadow-lg mt-6 text-center">
+                <h2 class="text-xl font-black text-emerald-400 mb-2">🎉 You're Ready!</h2>
+                <p class="text-sm leading-relaxed text-emerald-100/80 mb-4">
+                    You only ever have to do that setup once! From now on, just paste your code into the CODE tab, hit <b>DEPLOY TO GITHUB PAGES</b>, and your website will update live on the internet!
+                </p>
+            </div>
+            <br>
+        </div>
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-zinc-950/90 backdrop-blur-xl border-t border-zinc-800/60 pb-[env(safe-area-inset-bottom)] z-30 no-select">
+        <div class="flex justify-around items-center h-[70px] px-1">
+            <button onclick="switchTab('code')" id="btn-code" class="nav-btn active flex flex-col items-center justify-center w-full h-full text-emerald-400 transition-colors">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                <span class="text-[9px] font-bold tracking-widest">CODE</span>
+            </button>
+            <button onclick="switchTab('assets')" id="btn-assets" class="nav-btn flex flex-col items-center justify-center w-full h-full text-zinc-500 hover:text-zinc-300 transition-colors">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span class="text-[9px] font-bold tracking-widest">ASSETS</span>
+            </button>
+            <button onclick="switchTab('preview')" id="btn-preview" class="nav-btn flex flex-col items-center justify-center w-full h-full text-zinc-500 hover:text-zinc-300 transition-colors">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="text-[9px] font-bold tracking-widest">PREVIEW</span>
+            </button>
+            <button onclick="switchTab('deploy')" id="btn-deploy" class="nav-btn flex flex-col items-center justify-center w-full h-full text-zinc-500 hover:text-zinc-300 transition-colors">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                <span class="text-[9px] font-bold tracking-widest">DEPLOY</span>
+            </button>
+            <button onclick="switchTab('wiki')" id="btn-wiki" class="nav-btn flex flex-col items-center justify-center w-full h-full text-zinc-500 hover:text-zinc-300 transition-colors">
+                <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                <span class="text-[9px] font-bold tracking-widest">WIKI</span>
+            </button>
+        </div>
+    </nav>
+
+    <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-zinc-800 border border-zinc-700 text-white px-5 py-3 rounded-full shadow-2xl text-sm font-bold opacity-0 transition-opacity pointer-events-none z-50 flex items-center gap-2"></div>
+
+    <script>
+        // Data Structure v9
+        let files = JSON.parse(localStorage.getItem('odr-data-v9')) || [
+            { id: 1, name: 'index.html', content: '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>On Da Run</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <h1>Ready to Build</h1>\n  <script src="script.js"></' + 'script>\n</body>\n</html>', isAsset: false },
+            { id: 2, name: 'style.css', content: 'body {\n  background-color: #111;\n  color: #10b981;\n  font-family: sans-serif;\n  text-align: center;\n  padding-top: 50px;\n}', isAsset: false },
+            { id: 3, name: 'script.js', content: 'console.log("App Initialized.");', isAsset: false }
+        ];
+
+        let editorInstances = {}; 
+
+        window.onload = () => {
+            renderFiles();
+            renderAssets();
+            document.getElementById('gh-token').value = localStorage.getItem('gh-token') || '';
+            document.getElementById('gh-owner').value = localStorage.getItem('gh-owner') || '';
+            document.getElementById('gh-repo').value = localStorage.getItem('gh-repo') || '';
+            document.getElementById('gh-message').value = localStorage.getItem('gh-message') || 'Shipped with ODR';
+        };
+
+        // NEW: Auto-save deployment settings instantly as the user types
+        function saveDeploySettings() {
+            localStorage.setItem('gh-token', document.getElementById('gh-token').value);
+            localStorage.setItem('gh-owner', document.getElementById('gh-owner').value);
+            localStorage.setItem('gh-repo', document.getElementById('gh-repo').value);
+            localStorage.setItem('gh-message', document.getElementById('gh-message').value);
+        }
+
+        function saveState() { 
+            try {
+                localStorage.setItem('odr-data-v9', JSON.stringify(files)); 
+            } catch (e) {
+                showToast("⚠️ Storage full! Please delete some heavy images.");
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerHTML = `<svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> ${message}`;
+            toast.style.opacity = '1';
+            setTimeout(() => toast.style.opacity = '0', 2500);
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => { el.classList.remove('text-emerald-400'); el.classList.add('text-zinc-500'); });
+            
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+            document.getElementById(`btn-${tabId}`).classList.add('text-emerald-400');
+            document.getElementById(`btn-${tabId}`).classList.remove('text-zinc-500');
+
+            if(tabId === 'code') {
+                setTimeout(() => { Object.values(editorInstances).forEach(cm => cm.refresh()); }, 50);
+            }
+
+            if(tabId === 'preview') updatePreview();
+        }
+
+        function cleanAICode(id, event) {
+            event.stopPropagation();
+            const cm = editorInstances[id];
+            if (!cm) return;
+            let val = cm.getValue();
+            
+            const cleanVal = val.replace(/^```[a-z]*\s*\n/gi, '').replace(/\n```\s*$/g, '').replace(/```\s*$/g, '');
+            
+            if (val !== cleanVal) {
+                cm.setValue(cleanVal);
+                showToast("AI Markdown Cleared!");
+            } else {
+                showToast("Code already clean.");
+            }
+        }
+
+        function generatePWA() {
+            let changed = false;
+            if(!files.find(f => f.name === 'manifest.json')) {
+                files.push({id: Date.now(), name: 'manifest.json', content: '{\n  "name": "ODR App",\n  "short_name": "ODR",\n  "start_url": "./index.html",\n  "display": "standalone",\n  "background_color": "#09090b",\n  "theme_color": "#10b981",\n  "icons": [\n    {\n      "src": "icon.png",\n      "sizes": "192x192",\n      "type": "image/png"\n    }\n  ]\n}', isAsset: false});
+                changed = true;
+            }
+            if(!files.find(f => f.name === 'sw.js')) {
+                files.push({id: Date.now()+1, name: 'sw.js', content: 'self.addEventListener("install", e => { console.log("Service Worker Installed"); });\nself.addEventListener("fetch", e => { });', isAsset: false});
+                changed = true;
+            }
+            
+            let htmlFile = files.find(f => f.name === 'index.html');
+            if(htmlFile && !htmlFile.content.includes('serviceWorker')) {
+                htmlFile.content = htmlFile.content.replace('</body>', '  <script>\n    if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js"); }\n  </' + 'script>\n</body>');
+                changed = true;
+            }
+            
+            if(changed) {
+                saveState(); 
+                renderFiles();
+                showToast("PWA Boilerplate Added!");
+            } else {
+                showToast("PWA Files already exist.");
+            }
+        }
+
+        // --- CODE EDITOR LOGIC ---
+        function renderFiles() {
+            const container = document.getElementById('file-container');
+            container.innerHTML = '';
+            editorInstances = {};
+            
+            files.filter(f => !f.isAsset).forEach((file, index) => {
+                const details = document.createElement('details');
+                details.className = 'group bg-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm transition-all';
+                details.open = index === 0; 
+
+                let mode = "htmlmixed";
+                let iconColor = "text-zinc-500";
+                let icon = "📄";
+
+                if(file.name.endsWith('.html')) { mode = "htmlmixed"; iconColor = "text-blue-400"; icon = "🌐"; }
+                else if(file.name.endsWith('.css')) { mode = "css"; iconColor = "text-yellow-400"; icon = "🎨"; }
+                else if(file.name.endsWith('.js') || file.name.endsWith('.json')) { mode = "javascript"; iconColor = "text-red-400"; icon = "⚡"; }
+
+                details.innerHTML = `
+                    <summary class="flex items-center justify-between p-4 cursor-pointer bg-zinc-900 border-b border-transparent group-open:border-zinc-800 transition-colors no-select">
+                        <div class="flex items-center gap-3 w-full pr-2">
+                            <span class="${iconColor} text-xl drop-shadow-md">${icon}</span>
+                            <input type="text" value="${file.name}" 
+                                onchange="updateFileName(${file.id}, this.value)" 
+                                onclick="event.stopPropagation()"
+                                class="bg-transparent border-b border-transparent focus:border-zinc-700 focus:outline-none text-zinc-100 text-sm font-mono font-bold w-full py-0.5 placeholder-zinc-700">
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="cleanAICode(${file.id}, event)" class="text-indigo-400 hover:text-indigo-300 transition-colors px-2 font-bold text-lg" title="Strip AI Markdown">✨</button>
+                            <button onclick="deleteFile(${file.id}, event)" class="text-zinc-600 hover:text-red-500 transition-colors px-2 font-bold text-xl">×</button>
+                        </div>
+                    </summary>
+                    <div><textarea id="editor-${file.id}">${escapeHTML(file.content)}</textarea></div>
+                `;
+                
+                details.addEventListener("toggle", (e) => {
+                    if (details.open && editorInstances[file.id]) setTimeout(() => editorInstances[file.id].refresh(), 10);
+                });
+
+                container.appendChild(details);
+
+                const cm = CodeMirror.fromTextArea(document.getElementById(`editor-${file.id}`), {
+                    mode: mode, theme: "material-ocean", lineNumbers: true, lineWrapping: true, tabSize: 2, inputStyle: "textarea"
+                });
+
+                cm.on("change", () => {
+                    const f = files.find(x => x.id === file.id);
+                    if(f) f.content = cm.getValue();
+                    saveState();
+                });
+
+                editorInstances[file.id] = cm;
+            });
+        }
+
+        function addNewFile() {
+            files.push({ id: Date.now(), name: `file_${Date.now().toString().slice(-4)}.html`, content: '', isAsset: false });
+            renderFiles();
+            saveState();
+        }
+
+        // --- ASSET LOGIC ---
+        function renderAssets() {
+            const container = document.getElementById('assets-container');
+            container.innerHTML = '';
+            
+            files.filter(f => f.isAsset).forEach((file, index) => {
+                const details = document.createElement('details');
+                details.className = 'group bg-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm transition-all';
+                details.open = index === 0;
+
+                const hasContent = file.content.length > 0;
+                const isImg = hasContent && file.content.startsWith('data:image');
+
+                details.innerHTML = `
+                    <summary class="flex items-center justify-between p-4 cursor-pointer bg-zinc-900 border-b border-transparent group-open:border-zinc-800 transition-colors no-select">
+                        <div class="flex items-center gap-3 w-full pr-4">
+                            <span class="text-emerald-400 text-xl drop-shadow-md">📦</span>
+                            <input type="text" value="${file.name}" 
+                                onchange="updateFileName(${file.id}, this.value)" 
+                                onclick="event.stopPropagation()"
+                                class="bg-transparent border-b border-transparent focus:border-zinc-700 focus:outline-none text-zinc-100 text-sm font-mono font-bold w-full py-0.5 placeholder-zinc-700">
+                        </div>
+                        <button onclick="deleteFile(${file.id}, event)" class="text-zinc-600 hover:text-red-500 transition-colors px-2 font-bold text-xl">×</button>
+                    </summary>
+                    <div class="p-5 bg-zinc-950 flex flex-col items-center justify-center min-h-[140px]">
+                        ${!hasContent ? `
+                            <label class="cursor-pointer border-2 border-dashed border-zinc-700 hover:border-emerald-500 hover:bg-emerald-500/5 text-zinc-500 hover:text-emerald-400 w-full py-8 rounded-xl text-sm font-bold transition-all flex flex-col items-center justify-center gap-2">
+                                <input type="file" style="display: none;" onchange="attachAssetToBox(${file.id}, event)" accept="*/*">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                                Tap to Upload Media
+                            </label>
+                        ` : `
+                            ${isImg ? `<div class="bg-zinc-900 p-2 rounded-xl border border-zinc-800 mb-4 w-full flex justify-center"><img src="${file.content}" class="max-h-40 rounded-lg shadow-sm object-contain"></div>` : `<div class="text-zinc-500 font-mono text-sm mb-4 bg-zinc-900 py-6 px-4 rounded-xl border border-zinc-800 w-full text-center">[Binary Data Saved]</div>`}
+                            
+                            <div class="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-2 mb-3">
+                                <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider text-center mb-2">Tap to copy code reference</p>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button onclick="copyAssetRef(${file.id}, 'name')" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors">Name</button>
+                                    <button onclick="copyAssetRef(${file.id}, 'html')" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors">&lt;img&gt; Tag</button>
+                                    <button onclick="copyAssetRef(${file.id}, 'css')" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors">CSS url()</button>
+                                </div>
+                            </div>
+
+                            <label class="w-full bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 text-zinc-400 py-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center cursor-pointer no-select shadow-sm">
+                                <input type="file" style="display: none;" onchange="attachAssetToBox(${file.id}, event)" accept="*/*">
+                                Upload Replacement
+                            </label>
+                        `}
+                    </div>
+                `;
+                container.appendChild(details);
+            });
+        }
+
+        function addNewAsset() {
+            files.push({ id: Date.now(), name: `asset_${Date.now().toString().slice(-4)}.png`, content: '', isAsset: true });
+            renderAssets();
+            saveState();
+        }
+
+        function attachAssetToBox(id, event) {
+            const file = event.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const target = files.find(f => f.id === id);
+                if(target) {
+                    target.content = ev.target.result;
+                    target.name = file.name;
+                    saveState();
+                    renderAssets();
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateFileName(id, newName) { 
+            files.find(f => f.id === id).name = newName; 
+            saveState(); 
+            renderFiles(); 
+            renderAssets();
+        }
+        
+        function deleteFile(id, event) {
+            event.stopPropagation();
+            if(confirm('Delete file permanently?')) { files = files.filter(f => f.id !== id); renderFiles(); renderAssets(); saveState(); }
+        }
+
+        function copyAssetRef(id, type) {
+            const file = files.find(f => f.id === id);
+            if(!file) return;
+            let text = file.name;
+            if(type === 'html') text = `<img src="${file.name}" alt="Asset">`;
+            if(type === 'css') text = `url('${file.name}')`;
+            navigator.clipboard.writeText(text).then(() => showToast("Copied to Clipboard"));
+        }
+
+        // --- ISOLATED PREVIEWER ENGINE ---
+        let currentUrlMap = [];
+        
+        function updatePreview() {
+            const iframe = document.getElementById('preview-frame');
+            currentUrlMap.forEach(url => URL.revokeObjectURL(url));
+            currentUrlMap = [];
+
+            let blobMap = {}; 
+            let processedTexts = {}; 
+
+            files.filter(f => f.isAsset && f.content).forEach(f => { blobMap[f.name] = f.content; });
+
+            files.filter(f => !f.isAsset).forEach(f => {
+                let text = f.content;
+                files.forEach(target => {
+                    const regex = new RegExp(`(['"])${escapeRegExp(target.name)}(['"])`, 'g');
+                    text = text.replace(regex, `$1__BLOB__${target.name}__BLOB__$2`);
+                });
+                processedTexts[f.name] = text;
+            });
+
+            files.filter(f => !f.isAsset).forEach(f => {
+                let mime = f.name.endsWith('.html') ? "text/html" : (f.name.endsWith('.css') ? "text/css" : "application/javascript");
+                let blob = new Blob([processedTexts[f.name]], { type: mime });
+                let url = URL.createObjectURL(blob);
+                blobMap[f.name] = url;
+                currentUrlMap.push(url);
+            });
+
+            let finalTexts = {};
+            files.filter(f => !f.isAsset).forEach(f => {
+                let finalText = processedTexts[f.name];
+                for (let [name, url] of Object.entries(blobMap)) finalText = finalText.replaceAll(`__BLOB__${name}__BLOB__`, url);
+                finalTexts[f.name] = finalText;
+            });
+
+            let entryFileName = files.find(f => f.name === 'index.html') ? 'index.html' : files.find(f => !f.isAsset && f.name.endsWith('.html'))?.name;
+            iframe.removeAttribute('src'); 
+
+            if(entryFileName && finalTexts[entryFileName]) {
+                iframe.srcdoc = finalTexts[entryFileName];
+            } else {
+                iframe.srcdoc = "<div style='display:flex;height:100vh;align-items:center;justify-content:center;color:#a1a1aa;font-family:sans-serif;background:#fafafa;'>No HTML files found.</div>";
+            }
+        }
+
+        // --- GITHUB API DEPLOYMENT ---
+        async function deployAllFiles() {
+            const btn = document.getElementById('deploy-btn');
+            
+            // Explicitly pull values from DOM when clicking deploy, just to be extremely safe
+            const token = document.getElementById('gh-token').value;
+            const owner = document.getElementById('gh-owner').value;
+            const repo = document.getElementById('gh-repo').value;
+            const message = document.getElementById('gh-message').value || "Shipped with ODR";
+
+            if(!token || !owner || !repo) return alert('Repository credentials required.');
+
+            // Force one final local save just in case
+            saveDeploySettings();
+
+            btn.disabled = true; btn.innerHTML = `<span class="animate-pulse">UPLOADING...</span>`;
+
+            try {
+                const filesToPush = files.filter(f => !f.isAsset || (f.isAsset && f.content));
+
+                for (let i = 0; i < filesToPush.length; i++) {
+                    const file = filesToPush[i];
+                    btn.innerText = `PUSHING [${i+1}/${filesToPush.length}]`;
+                    
+                    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${file.name}`;
+                    let sha = null;
+
+                    try {
+                        const checkRes = await fetch(url, { headers: { 'Authorization': `token ${token}` } });
+                        if (checkRes.ok) sha = (await checkRes.json()).sha;
+                    } catch (e) {}
+
+                    let fileContentRaw = file.isAsset ? file.content.split(',')[1] : btoa(unescape(encodeURIComponent(file.content)));
+                    const payload = { message: message, content: fileContentRaw };
+                    if (sha) payload.sha = sha;
+
+                    const response = await fetch(url, { method: 'PUT', headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error((await response.json()).message);
+                }
+                document.getElementById('deploy-form').classList.add('hidden');
+                document.getElementById('success-screen').classList.remove('hidden');
+
+            } catch (err) {
+                alert(`Push Failed: ${err.message}`);
+                btn.disabled = false; btn.innerHTML = "DEPLOY TO GITHUB PAGES";
+            }
+        }
+
+        function openLiveSite() {
+            const owner = document.getElementById('gh-owner').value;
+            const repo = document.getElementById('gh-repo').value;
+            window.open(`https://${owner}.github.io/${repo}`, '_blank');
+        }
+
+        function startNewProject() {
+            if(confirm("This will clear all current code. Are you sure?")) {
+                localStorage.removeItem('odr-data-v9');
+                window.location.reload(); 
+            }
+        }
+    </script>
+</body>
+</html>
