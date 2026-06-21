@@ -57,7 +57,7 @@
         </div>
     </header>
 
-    <main class="flex-1 overflow-y-auto px-4 pt-5 pb-[calc(80px+env(safe-area-inset-bottom))]">
+    <main class="flex-1 overflow-y-auto px-4 pt-5 pb-[150px]">
         
         <div id="code-tab" class="tab-content active max-w-3xl mx-auto space-y-5">
             <div id="file-container" class="space-y-4"></div>
@@ -92,7 +92,7 @@
             </div>
         </div>
 
-        <div id="deploy-tab" class="tab-content max-w-xl mx-auto space-y-5 pb-6">
+        <div id="deploy-tab" class="tab-content max-w-xl mx-auto space-y-5">
             <div id="deploy-form" class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 shadow-lg backdrop-blur-sm">
                 <div class="space-y-4">
                     <div>
@@ -151,7 +151,7 @@
             </div>
         </div>
 
-        <div id="wiki-tab" class="tab-content max-w-xl mx-auto space-y-6 pb-6 text-zinc-300">
+        <div id="wiki-tab" class="tab-content max-w-xl mx-auto space-y-6 text-zinc-300">
             
             <div class="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-500/30 rounded-2xl p-6 shadow-lg">
                 <h2 class="text-2xl font-black text-white tracking-tight mb-2 flex items-center gap-2">👋 Welcome to ODR!</h2>
@@ -204,13 +204,23 @@
                 </ul>
             </div>
 
+            <div class="space-y-4">
+                <h3 class="font-black text-xl text-emerald-400 border-b border-zinc-800 pb-2">Step 5: Your First Deploy!</h3>
+                <p class="text-sm leading-relaxed">Now that your GitHub is ready, it's time to send your first batch of code from this app!</p>
+                <ul class="list-disc pl-5 text-sm space-y-2 text-zinc-400">
+                    <li>Tap the <b>DEPLOY</b> tab at the bottom of this screen.</li>
+                    <li>Fill in the <b>Personal Access Token</b>, <b>Username</b>, and <b>Repository Name</b> you just created.</li>
+                    <li>Tap the big green <b>DEPLOY TO GITHUB PAGES</b> button.</li>
+                    <li>Wait 1-2 minutes, and your new website will be live on the internet!</li>
+                </ul>
+            </div>
+
             <div class="bg-emerald-900/20 border border-emerald-500/30 rounded-2xl p-6 shadow-lg mt-6 text-center">
                 <h2 class="text-xl font-black text-emerald-400 mb-2">🎉 You're Ready!</h2>
-                <p class="text-sm leading-relaxed text-emerald-100/80 mb-4">
-                    You only ever have to do that setup once! From now on, just paste your code into the CODE tab, hit <b>DEPLOY TO GITHUB PAGES</b>, and your website will update live on the internet!
+                <p class="text-sm leading-relaxed text-emerald-100/80 mb-2">
+                    You only ever have to do that setup once! From now on, just paste your code into the CODE tab, hit <b>DEPLOY TO GITHUB PAGES</b>, and your website will update live.
                 </p>
             </div>
-            <br>
         </div>
     </main>
 
@@ -242,8 +252,8 @@
     <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-zinc-800 border border-zinc-700 text-white px-5 py-3 rounded-full shadow-2xl text-sm font-bold opacity-0 transition-opacity pointer-events-none z-50 flex items-center gap-2"></div>
 
     <script>
-        // Data Structure v9
-        let files = JSON.parse(localStorage.getItem('odr-data-v9')) || [
+        // Data Structure v10
+        let files = JSON.parse(localStorage.getItem('odr-data-v10')) || [
             { id: 1, name: 'index.html', content: '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>On Da Run</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <h1>Ready to Build</h1>\n  <script src="script.js"></' + 'script>\n</body>\n</html>', isAsset: false },
             { id: 2, name: 'style.css', content: 'body {\n  background-color: #111;\n  color: #10b981;\n  font-family: sans-serif;\n  text-align: center;\n  padding-top: 50px;\n}', isAsset: false },
             { id: 3, name: 'script.js', content: 'console.log("App Initialized.");', isAsset: false }
@@ -260,7 +270,6 @@
             document.getElementById('gh-message').value = localStorage.getItem('gh-message') || 'Shipped with ODR';
         };
 
-        // NEW: Auto-save deployment settings instantly as the user types
         function saveDeploySettings() {
             localStorage.setItem('gh-token', document.getElementById('gh-token').value);
             localStorage.setItem('gh-owner', document.getElementById('gh-owner').value);
@@ -270,7 +279,7 @@
 
         function saveState() { 
             try {
-                localStorage.setItem('odr-data-v9', JSON.stringify(files)); 
+                localStorage.setItem('odr-data-v10', JSON.stringify(files)); 
             } catch (e) {
                 showToast("⚠️ Storage full! Please delete some heavy images.");
             }
@@ -558,7 +567,6 @@
         async function deployAllFiles() {
             const btn = document.getElementById('deploy-btn');
             
-            // Explicitly pull values from DOM when clicking deploy, just to be extremely safe
             const token = document.getElementById('gh-token').value;
             const owner = document.getElementById('gh-owner').value;
             const repo = document.getElementById('gh-repo').value;
@@ -566,7 +574,6 @@
 
             if(!token || !owner || !repo) return alert('Repository credentials required.');
 
-            // Force one final local save just in case
             saveDeploySettings();
 
             btn.disabled = true; btn.innerHTML = `<span class="animate-pulse">UPLOADING...</span>`;
@@ -610,7 +617,7 @@
 
         function startNewProject() {
             if(confirm("This will clear all current code. Are you sure?")) {
-                localStorage.removeItem('odr-data-v9');
+                localStorage.removeItem('odr-data-v10');
                 window.location.reload(); 
             }
         }
